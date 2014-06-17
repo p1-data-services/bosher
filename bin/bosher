@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+require 'yaml'
+require 'bosher'
+
+unless ARGV.any?
+  puts "Usage: bosher manifest, spec, template, job_name"
+  exit 0
+end
+
+puts Bosher::Bosher.new.bosh(
+  YAML.load_file(ARGV[0]), 
+  YAML.load_file(ARGV[1]), 
+  IO.read(ARGV[2]), 
+  ARGV[3]
+)
