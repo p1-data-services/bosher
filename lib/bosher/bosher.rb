@@ -3,14 +3,21 @@ require 'ostruct'
 require 'yaml'
 require 'active_support/core_ext'
 
+class MissingPropertyInSpec < StandardError
+end
+
 module Bosher
   class Bosher
     class ErbalT < OpenStruct
-      def render(template)
+      def render(template, keys)
+        @spec_keys = keys
         ERB.new(template).result(binding)
       end
 
       def p(key)
+        if !@spec_keys.include?(key)
+          raise MissingPropertyInSpec
+        end
         key.split('.').reduce(self) do |memo, k|
           memo[k]
         end
@@ -29,7 +36,7 @@ module Bosher
     def bosh(manifest, spec, template, job_name)
       spec_defaults = spec_defaults(spec)
       defaults = nestify(spec_defaults)
-      ErbalT.new(defaults.deep_merge(properties(manifest, job_name))).render(template)
+      ErbalT.new(defaults.deep_merge(properties(manifest, job_name))).render(template, spec_defaults.keys)
     end
 
     private

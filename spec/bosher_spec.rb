@@ -44,4 +44,33 @@ three
 ["6.6.6.6"]
 ASSET
   end
+
+  it "blows up if spec doesn't have a property" do
+    manifest = YAML.load(<<MANIFEST)
+---
+jobs:
+  - name: the-job
+    properties:
+      property1: 7
+      missing:
+        from:
+          spec: 5
+      missing_from_spec: 17
+      bosh:
+        dns: [8.8.8.8]
+MANIFEST
+    spec = YAML.load(<<SPEC)
+---
+properties:
+  property1:
+    description: whatever
+SPEC
+    template = <<TEMPLATE
+<%= p('missing.from.spec') %>
+TEMPLATE
+
+    expect {
+    Bosher::Bosher.new.bosh manifest, spec, template, 'the-job'
+    }.to raise_error(MissingPropertyInSpec)
+  end
 end
